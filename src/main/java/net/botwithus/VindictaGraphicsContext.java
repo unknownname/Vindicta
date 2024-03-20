@@ -19,7 +19,7 @@ public class VindictaGraphicsContext extends ScriptGraphicsContext {
         if (ImGui.Begin("Vindicta", ImGuiWindowFlag.None.getValue())) {
             if (ImGui.BeginTabBar("My bar", ImGuiWindowFlag.None.getValue())) {
                 if (ImGui.BeginTabItem("Settings", ImGuiWindowFlag.None.getValue())) {
-                    ImGui.Text("Welcome to Vindicaa Script");
+                    ImGui.Text("Welcome to Vindicta Script");
                     ImGui.Text("My scripts state is: " + script.getBotState());
                     if (ImGui.Button("Start")) {
                         //button has been clicked

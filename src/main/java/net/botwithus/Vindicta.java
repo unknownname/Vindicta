@@ -1,6 +1,7 @@
 package net.botwithus;
 
 import net.botwithus.api.game.hud.inventories.Bank;
+import net.botwithus.api.game.hud.inventories.LootInventory;
 import net.botwithus.internal.scripts.ScriptDefinition;
 import net.botwithus.rs3.events.impl.SceneObjectUpdateEvent;
 import net.botwithus.rs3.events.impl.ServerTickedEvent;
@@ -102,17 +103,27 @@ public class Vindicta extends LoopingScript {
             }
         }
     }
+    private long handlebanking()
+    {
+        if (Bank.isOpen())
+        {
+            println("Bank is open");
+            Bank.loadPreset(3);
+            botState = BotState.FIGHTING;
+            return random.nextLong(1000,3000);
+        }else
+        {
+            SceneObject bankChest = SceneObjectQuery.newQuery().name("Bank chest").results().nearest();
+            if(bankChest != null)
+            {
+                println("Interact with War Bank: " + bankChest.interact("Use"));
+            }
+        }
+        return random.nextLong(750, 1650);
+    }
 
     private long handleSkilling(LocalPlayer player) {
-        //for example, if skilling progress interface is open, return a randomized value to keep waiting.
-        /*if (Interfaces.isOpen(1251))
-            return random.nextLong(250,1500);*/
-        //if our inventory is full, lets bank.
-        /*if (Backpack.isFull()) {
-            println("Going to banking state!");
-            botState = BotState.BANKING;
-            return random.nextLong(250,1500);
-        }*/
+
         int currentHealth = player.getCurrentHealth();
         int adrenaline = VarManager.getVarValue(VarDomainType.PLAYER, 679);
         int currentprayer = player.getPrayerPoints();
@@ -126,6 +137,8 @@ public class Vindicta extends LoopingScript {
             SceneObject BankChest = SceneObjectQuery.newQuery().name("Bank chest").results().nearest();
             SceneObject altarwar = SceneObjectQuery.newQuery().name("Altar of War").results().nearest();
             SceneObject adrenalinecrystal = SceneObjectQuery.newQuery().name("Adrenaline crystal").results().nearest();
+
+
             if (currentHealth < player.getMaximumHealth())
             {
                 if(BankChest != null)
@@ -135,8 +148,8 @@ public class Vindicta extends LoopingScript {
                     Execution.delayUntil(10000,() -> {
                         return player.getCurrentHealth() == player.getMaximumHealth();
                     });
-                    if(Bank.isOpen())
-                    {
+                    if (Bank.isOpen()) {
+                        println("Bank is open");
                         Bank.loadPreset(3);
                     }
                 }
@@ -309,8 +322,8 @@ public class Vindicta extends LoopingScript {
         EntityResultSet<SceneObject> results = firewall.results();
 
 
-        println("Region ID inside instance:" + instanceregionID);
-        println("Region ID inside instance Player :" + Client.getLocalPlayer().getCoordinate().getRegionId());
+        //println("Region ID inside instance:" + instanceregionID);
+        //println("Region ID inside instance Player :" + Client.getLocalPlayer().getCoordinate().getRegionId());
         if(vindictap1 != null)
         {
             meleeprayerswitch();
@@ -353,13 +366,13 @@ public class Vindicta extends LoopingScript {
                    if(calculateSafeSpot(dangerousObject).isReachable() == true)
                     {
                         Movement.walkTo(Client.getLocalPlayer().getCoordinate().getX() +3 , Client.getLocalPlayer().getCoordinate().getY() + 2, false);
-                        delay(400);
+                        delay(600);
                         attackNpc(vindictap1);
                         println("Moving to safe spot");
                     }
                     else {
                         Movement.walkTo(Client.getLocalPlayer().getCoordinate().getX() -2  , Client.getLocalPlayer().getCoordinate().getY() -2 , false);
-                        delay(400);
+                        delay(600);
                        println("Moving to safe else spot");
                         attackNpc(vindictap1);
                     }
@@ -405,13 +418,13 @@ public class Vindicta extends LoopingScript {
                     if(calculateSafeSpot(dangerousObject).isReachable() == true)
                     {
                         Movement.walkTo(Client.getLocalPlayer().getCoordinate().getX() +3 , Client.getLocalPlayer().getCoordinate().getY() + 2, false);
-                        delay(400);
+                        delay(600);
                         attackNpc(vindictap2);
                         println("Moving to safe spot");
                     }
                     else {
                         Movement.walkTo(Client.getLocalPlayer().getCoordinate().getX() -2  , Client.getLocalPlayer().getCoordinate().getY() -2 , false);
-                        delay(400);
+                        delay(600);
                         attackNpc(vindictap2);
                         println("Moving to safe spot");
                     }
@@ -449,6 +462,14 @@ public class Vindicta extends LoopingScript {
             if(loot !=null)
             {
                 println("Picked up loot: " + loot.interact("Take"));
+                if(LootInventory.isOpen())
+                {
+                    LootInventory.lootAll();
+                }
+                else
+                {
+                    println("Can't find Items to loot");
+                }
                 Execution.delayUntil(10000,() ->
                 {
                     return items.isEmpty();
