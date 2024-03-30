@@ -571,20 +571,20 @@ public class Vindicta extends LoopingScript {
         if (!isOverloadActive()) {
 
             String[] overloadSalveVariants = new String[]{
-                    "Elder Overload potion",
-                    "Elder Overload salve",
-                    "Elder Overload potion (1)",
-                    "Elder Overload potion (2)",
-                    "Elder Overload potion (3)",
-                    "Elder Overload potion (4)",
-                    "Elder Overload potion (5)",
-                    "Elder Overload potion (6)",
-                    "Elder Overload salve (1)",
-                    "Elder Overload salve (2)",
-                    "Elder Overload salve (3)",
-                    "Elder Overload salve (4)",
-                    "Elder Overload salve (5)",
-                    "Elder Overload salve (6)"};
+                    "Elder overload potion",
+                    "Elder overload salve",
+                    "Elder overload potion (1)",
+                    "Elder overload potion (2)",
+                    "Elder overload potion (3)",
+                    "Elder overload potion (4)",
+                    "Elder overload potion (5)",
+                    "Elder overload potion (6)",
+                    "Elder overload salve (1)",
+                    "Elder overload salve (2)",
+                    "Elder overload salve (3)",
+                    "Elder overload salve (4)",
+                    "Elder overload salve (5)",
+                    "Elder overload salve (6)"};
 
             for (String potionName : overloadSalveVariants) {
                 if (ActionBar.containsItem(potionName)) {
