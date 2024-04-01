@@ -38,6 +38,7 @@ import net.botwithus.rs3.util.RandomGenerator;
 import net.botwithus.rs3.*;
 
 
+import java.lang.ref.Cleaner;
 import java.util.*;
 
 public class Vindicta extends LoopingScript {
@@ -61,22 +62,6 @@ public class Vindicta extends LoopingScript {
     Coordinate topleftCorner = null;
     Coordinate characterPosition = null;
     /////
-    private String[] POTION_NAME = {
-            "Elder Overload potion (1)",
-            "Elder Overload potion (2)",
-            "Elder Overload potion (3)",
-            "Elder Overload potion (4)",
-            "Elder Overload potion (5)",
-            "Elder Overload potion (6)",
-            "Elder Overload salve (1)",
-            "Elder Overload salve (2)",
-            "Elder Overload salve (3)",
-            "Elder Overload salve (4)",
-            "Elder Overload salve (5)",
-            "Elder Overload salve (6)"};
-
-
-        ////////////////////////
     private boolean useStatBoostingPotion = false;
 
     private boolean darknessenable = false;
@@ -85,9 +70,12 @@ public class Vindicta extends LoopingScript {
     private boolean deathessence = false;
     private boolean essenceoff = false;
     private boolean eatFood = true;
+    private boolean Excalibur = false;
+
+    private boolean scriptures = false;
 
     int presentNumber = 1;
-    int numberofkills = 1;
+    int numberofkills = 5000;  //Default Value
     //NativeInteger presetNumber = new NativeInteger(1);
     private int currentItem = 0;
     String[] prayerRestoreOptions = { "Super Restore", "Prayer Potions" };
@@ -134,36 +122,18 @@ public class Vindicta extends LoopingScript {
 
                 vandictafight();
             }
-            if(Client.getLocalPlayer().getCurrentHealth() <= 5000 && eatFood == true)    //// EAT FOOD
+            if(Client.getLocalPlayer().getCurrentHealth() <= numberofkills && eatFood == true)    //// EAT FOOD
             {
                 eatFood();
             }
         });
-        killperhour();
+
         return super.initialize();
     }
 
-    private void eatFood()
-    {
-        Item food = InventoryItemQuery.newQuery(93).category(58).results().first();
-        if (food == null) {
-            println("[healHealth] Out of food.");
-            return;
-        }
-        boolean eat = Backpack.interact(food.getSlot(), "Eat");
-        if (eat) {
-            println("[healHealth] Successfully ate " + food.getName());
-            Execution.delay(RandomGenerator.nextInt(250,450));
-        } else {
-            println("[healHealth] Failed to eat.");
-        }
-    }
 
-    public void killperhour()
-    {
-        long currnettime = (System.currentTimeMillis() - scriptStartTime) /1000;
-        killperhour = (int) Math.round(3600.0/ currnettime * vindictadeathcounter);
-    }
+
+
 
     @Override
     public void onLoop() {
@@ -179,6 +149,8 @@ public class Vindicta extends LoopingScript {
             case IDLE -> {
                 //do nothing
                 println("We're idle!");
+                unsubscribeAll();
+
                 Execution.delay(random.nextLong(1000,3000));
             }
             case FIGHTING -> {
@@ -196,11 +168,7 @@ public class Vindicta extends LoopingScript {
         int currentHealth = player.getCurrentHealth();
         int adrenaline = VarManager.getVarValue(VarDomainType.PLAYER, 679);
         int currentprayer = player.getPrayerPoints();
-       /* println("Current Health" + currentHealth);
-        println("Prayer Points" + currentprayer);
-        println("Print Adrenaline" + adrenaline);
-        println("Player Max Health:" + player.getMaximumHealth());
-*/
+
         if(player.getCoordinate().getRegionId() == 13214)
         {
             SceneObject BankChest = SceneObjectQuery.newQuery().name("Bank chest").results().nearest();
@@ -208,13 +176,9 @@ public class Vindicta extends LoopingScript {
             SceneObject adrenalinecrystal = SceneObjectQuery.newQuery().name("Adrenaline crystal").results().nearest();
             thresholdvalue = 0; // Setting up value to 0 so player can interact with Threshold stupid crap
             surgecount = 0; // Setting up value to 0 everytime player enter's war's area
-            //random.nextLong(1200, 1800);
-           /* println("Bank Present" + presentNumber);
-            println("Stat potion check" + useStatBoostingPotion);
-            println("Stat potion check" + eatFood);*/
             if(vindictadeathcounter >=1)
             {
-                Execution.delay(RandomGenerator.nextInt(1000,2000));
+                Execution.delay(RandomGenerator.nextInt(1500,2000));
             }
 
             if (currentHealth < player.getMaximumHealth())
@@ -258,7 +222,7 @@ public class Vindicta extends LoopingScript {
         if(player.getCoordinate().getRegionId() == 12395 || player.getCoordinate().getRegionId() == 12396 || player.getCoordinate().getRegionId() == 12651 || player.getCoordinate().getRegionId() == 12652 )
         {
             SceneObject threshold = SceneObjectQuery.newQuery().name("Threshold").results().nearest();
-            if(VarManager.getVarbitValue(30856) >= 400 && GetInstanceTimeLeft() >=1 && GetInstanceTimeLeft() <=60)
+            if(VarManager.getVarbitValue(30856) >= 400 )
             {
 
                 println("Threshold value Outside: " + thresholdvalue);
@@ -267,10 +231,10 @@ public class Vindicta extends LoopingScript {
 
                     Execution.delay(1000);
                     println("Enter Threshold: " + threshold.interact("Traverse"));
-                    Execution.delayUntil(40000,()-> threshold.interact("Traverse"));;
+                    //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));;
+                    Execution.delay(3000);
                     thresholdvalue = thresholdvalue +1;
-                    Execution.delay(1000);
-                    println("Threshold value: " + thresholdvalue);
+                    //println("Threshold value: " + thresholdvalue);
 
                 }else if(threshold != null && thresholdvalue == 1)
                 {
@@ -278,15 +242,17 @@ public class Vindicta extends LoopingScript {
                     enterfight(player);
                 }
 
-            }else if(killrequired == false)
+            }else if(killrequired == false || (GetInstanceTimeLeft() >=1 && GetInstanceTimeLeft() <=60))
             {
                 if (threshold !=null && thresholdvalue == 0)
                 {
-                    thresholdvalue = thresholdvalue + 1;
+
                     Execution.delay(1000);
                     println("Enter Threshold: " + threshold.interact("Traverse"));
-                    Execution.delay(1000);
-                    println("Threshold value: " + thresholdvalue);
+                    //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));
+                    Execution.delay(3000);
+                    thresholdvalue = thresholdvalue + 1;
+                    //println("Threshold value: " + thresholdvalue);
 
                 }else if(threshold !=null && thresholdvalue == 1)
                 {
@@ -304,10 +270,35 @@ public class Vindicta extends LoopingScript {
         if(instanceregionID == Client.getLocalPlayer().getCoordinate().getRegionId())
         {
             Npc vindictap2 = NpcQuery.newQuery().name("Gorvek and Vindicta").results().nearest();
-            if(vindictap2 !=null && vindictap2.getCurrentHealth() == 0)
-            grounditem();
+            if(vindictap2 !=null && (vindictap2.getCurrentHealth() == 0 || vindictap2.getAnimationId() == 28272))
+                grounditem();
         }
-        return random.nextLong(500,950);
+
+
+
+
+
+        return random.nextLong(500,750);
+    }
+
+
+    private void eatFood()
+    {
+        Item food = InventoryItemQuery.newQuery(93).category(58).results().first();
+        if (food == null) {
+            println("Out of food.");
+            ActionBar.useTeleport("War's Retreat Teleport");
+            return;
+        }
+        boolean eat = Backpack.interact(food.getSlot(), "Eat");
+        if (eat) {
+            println("Successfully ate " + food.getName());
+            Execution.delay(600);
+
+        } else {
+            println("Failed to eat.");
+        }
+
     }
 
     private void bossportal(LocalPlayer player)
@@ -315,7 +306,9 @@ public class Vindicta extends LoopingScript {
         SceneObject bossportal = SceneObjectQuery.newQuery().name("Portal (Vindicta & Gorvek)").results().nearest();
         if(bossportal !=null)
         {
+
             println("Enter Vindicta Portal: " + bossportal.interact("Enter"));
+            Execution.delayUntil(3000, () -> !(player.getAnimationId() == -1));
         }
         else
         {
@@ -338,48 +331,35 @@ public class Vindicta extends LoopingScript {
         Npc ancientmage = NpcQuery.newQuery().name("Ancient mage").inside(specfiicArea).results().nearest();
         Npc nechryael = NpcQuery.newQuery().name("Nechryael").inside(specfiicArea).results().nearest();
 
-        if(demon !=null || ancientmage !=null || ancientran !=null || ancientwar != null || nechryael != null)
+        if(demon !=null && !player.hasTarget())
         {
-            if(player.distanceTo(demon) <=30)
-            {
-                attackNpc(demon);
-            }else if (player.distanceTo(ancientmage) <=30)
-            {
-                attackNpc(ancientmage);
-            }else if (player.distanceTo(ancientran) <=30)
-            {
-                attackNpc(ancientran);
-            }else if (player.distanceTo(ancientwar) <=30)
-            {
-                attackNpc(ancientwar);
-            }else if(player.distanceTo(nechryael) <=30)
-            {
-                attackNpc(nechryael);
-            }
-        }
-        else
+            attackNpc(demon);
+            Execution.delay(RandomGenerator.nextInt(650, 950));
+        } else if(ancientmage !=null && !player.hasTarget())
         {
-            println("can't find enemies");
-        }
-
-        /*if(!npcsInArea.isEmpty())
-        {
-
-
-            Npc nearestnpc = npcsInArea.nearestTo(player.getCoordinate());
-            if(nearestnpc !=null)
-            {
-                attackNpc(nearestnpc);
-                random.nextLong(750, 1350);
-            }
-        }*/
-
+            attackNpc(ancientmage);
+            Execution.delay(RandomGenerator.nextInt(650, 950));
+        } else if (ancientran !=null && !player.hasTarget()) {
+            attackNpc(ancientran);
+            Execution.delay(RandomGenerator.nextInt(650, 950));
+    } else if(ancientwar != null && !player.hasTarget())
+    {
+        attackNpc(ancientwar);
+        Execution.delay(RandomGenerator.nextInt(650, 950));
+    }else if(nechryael != null && !player.hasTarget())
+    {
+        attackNpc(nechryael);
+        Execution.delay(RandomGenerator.nextInt(650, 950));
+    }
+        else {
+        println("can't find enemies");
+    }
     }
     private void enterfight(LocalPlayer player) {
 
         SceneObject barrier = SceneObjectQuery.newQuery().name("Barrier").results().nearest();
         if (barrier != null) {
-            println("Traverse the Barrier: " + barrier.interact("Traverse"));
+            println("Traverse Outside Barrier: " + barrier.interact("Traverse"));
             Execution.delay(2000);
             MiniMenu.interact(ComponentAction.COMPONENT.getType(), 1, -1, 104267836);  //Region ID 37452 //npc name: Vindicta phase2: Gorvek and Vindicta
             // Vindicta All three Animation: 28253, 28260, 28256
@@ -413,13 +393,25 @@ public class Vindicta extends LoopingScript {
 
     private void vandictafight()
     {
-        if(useStatBoostingPotion && overloadChecked == false)
+        if(VarManager.getVarbitValue(26037) == 0)
+        {
+            overloadChecked = false;
+        }
+        if(useStatBoostingPotion && !overloadChecked)
         {
            useOverload();
         }
         if(darknessenable)
         {
             activateDarkness();
+        }
+        if(scriptures)
+        {
+            books();
+        }
+        if(Excalibur)
+        {
+            enhancedExca();
         }
 
 
@@ -435,24 +427,26 @@ public class Vindicta extends LoopingScript {
         Coordinate playerPosition = Client.getLocalPlayer().getCoordinate();
         boolean isOnObject = isPlayerstandingonobject(playerPosition);
 
-        if(isOnObject)
+        /*if(isOnObject)
         {
             Coordinate safePositon = findsafespotCoorindate(rectangularArea);
             if(safePositon !=null)
             {
                 Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
                 delay(600);
+
                 println("Player standing on Object: " + isPlayerstandingonobject(playerPosition));
                 println("Player moving to safe spot: " + safePositon);
+                return;
+
             }
-        }
-        //println("Region ID inside instance:" + instanceregionID);
-        //println("Region ID inside instance Player :" + Client.getLocalPlayer().getCoordinate().getRegionId());
+
+        }*/
+
         if(vindictap1 != null)
         {
             meleeprayerswitch();
-            //println(" Inside the loop where boss detected");
-            println("Animation Boss ID: " + vindictap1.getAnimationId());
+
             attackNpc(vindictap1);
             DeathEssence();
             essenceoffin();
@@ -477,16 +471,40 @@ public class Vindicta extends LoopingScript {
 
             }
             else {
-                println("No extra animation Detected");
+                println("extra animation Detected");
             }
-
             if (!results.isEmpty() && vindictap1.getAnimationId() == 28260)
             {
 
-                for(int x=0; x<=1; x++){
+                Coordinate safePositon = findsafespotCoorindate(rectangularArea);
+                if(safePositon !=null)
+                {
+                    Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
+                    delay(600);
+                }
+
+                /*for(int x=0; x<=1; x++){
                 //Area.Rectangular rectangularArea = new Area.Rectangular(topleftCorner, bottomRightCorner);
                 moveTounoccupiedCoorindate(rectangularArea);
+                println("Moving away from Firewall Vindicta Phase 1 attack");
+                    delay(600);
+
+            }*/
             }
+            else if(isOnObject)
+            {
+                Coordinate safePositon = findsafespotCoorindate(rectangularArea);
+                if(safePositon !=null)
+                {
+                    Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
+                    delay(600);
+
+                    println("Player standing on Object: " + isPlayerstandingonobject(playerPosition));
+                    println("Player moving to safe spot: " + safePositon);
+                    return;
+
+                }
+
             }
 
         }
@@ -497,7 +515,7 @@ public class Vindicta extends LoopingScript {
                 {invokedeath();}
             DeathEssence();
             essenceoffin();
-            println("Animation Boss ID: " + vindictap2.getAnimationId());
+            //println("Animation Boss ID: " + vindictap2.getAnimationId());
             if (vindictap2.getAnimationId() == 28273) {
                 meleeprayerswitch();
 
@@ -519,14 +537,43 @@ public class Vindicta extends LoopingScript {
                 println(" extra animation Detected" + vindictap2.getAnimationId());
             }
 
-            if (!results.isEmpty() && vindictap2.getAnimationId() == 28275)
+            if (!results.isEmpty() && vindictap2.getAnimationId() == 28276)
             {
-                delay(1800);
-                for(int x=0; x<=1; x++) {
+                //delay(1800);
+                delay(600);
+
+                Coordinate safePositon = findsafespotCoorindate(rectangularArea);
+                if(safePositon !=null)
+                {
+                    Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
+                    delay(600);
+                }
+
+                /*for(int x=0; x<=1; x++) {
                     //Area.Rectangular rectangularArea = new Area.Rectangular(topleftCorner, bottomRightCorner);
                     moveTounoccupiedCoorindate(rectangularArea);
-                }
+                    println("Moving away from Firewall Vindicta Phase 2 attack");
+                    delay(600);
+
+                }*/
             }
+
+            else if (isOnObject)
+            {
+                Coordinate safePositon = findsafespotCoorindate(rectangularArea);
+                if(safePositon !=null)
+                {
+                    Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
+                    delay(600);
+
+                    println("Player standing on Object: " + isPlayerstandingonobject(playerPosition));
+                    println("Player moving to safe spot: " + safePositon);
+                    return;
+
+                }
+
+            }
+
             if(vindictap2.getCurrentHealth() == 0 || vindictap2.getAnimationId() == 28272)
             {
                 surgecount = 0;
@@ -554,7 +601,7 @@ public class Vindicta extends LoopingScript {
 
     private void vindictaphase2()
     {}
-    private static boolean overloadChecked = false;
+    private boolean overloadChecked = false;
 
     private boolean isOverloadActive() {
         boolean overloadActive = VarManager.getVarbitValue(26037) != 0;
@@ -647,6 +694,38 @@ public class Vindicta extends LoopingScript {
         }
     }
 ////
+    private void enhancedExca()
+    {
+        if(Excalibur)
+        {
+            if(Client.getLocalPlayer() != null)
+            {
+                if(VarManager.getVarbitValue(22838) == 0)
+                {
+                    println("Excalibur Activated : " + ActionBar.useItem("Augmented enhanced Excalibur","Activate"));
+                }
+            }
+        }
+    }
+
+    private void books()
+    {
+        if(scriptures)
+        {
+            if(Client.getLocalPlayer() != null)
+            {
+                if(VarManager.getVarbitValue(30605) == 0)
+                {
+                    if(VarManager.getVarbitValue(30604) >=0) {
+                        println("Activated Scripture : " + ActionBar.useItem("Scripture of Wen","Activate/Deactivate"));
+                    }else
+                    {
+                        println("Book is out of charge");
+                    }
+                }
+            }
+        }
+    }
 
     private void DeathEssence() { //55480 sprite iD
         if (deathessence) {
@@ -720,6 +799,8 @@ public class Vindicta extends LoopingScript {
     }
 
     public Coordinate findsafespotCoorindate(Area.Rectangular rectangularArea) {
+
+        getSceneObjectCoordinates(rectangularArea).clear();
         List<Coordinate> allcoordinates = getAllCoordinatesInRectangularArea(rectangularArea);
         List<Coordinate> sceneobjectCoordinates = getSceneObjectCoordinates(rectangularArea);
 
@@ -727,7 +808,7 @@ public class Vindicta extends LoopingScript {
         Coordinate currentplayerPostion = Client.getLocalPlayer().getCoordinate();
 
         Coordinate closestCoordinate = allcoordinates.stream().filter(coord -> !sceneobjectCoordinates.contains(coord))
-                .filter(coord -> Distance.between(currentplayerPostion, coord) >= 2)
+                .filter(coord -> Distance.between(currentplayerPostion, coord) >= 3)
                 .min(Comparator.comparingDouble(coord -> Distance.between(currentplayerPostion, coord)))
                 .orElse(null);
 
@@ -736,6 +817,8 @@ public class Vindicta extends LoopingScript {
 
         public void moveTounoccupiedCoorindate(Area.Rectangular rectangularArea)
     {
+
+        getSceneObjectCoordinates(rectangularArea).clear();
         List<Coordinate> allcoordinates = getAllCoordinatesInRectangularArea(rectangularArea);
         List<Coordinate> sceneobjectCoordinates = getSceneObjectCoordinates(rectangularArea);
 
@@ -749,7 +832,9 @@ public class Vindicta extends LoopingScript {
 
         if(closestCoordinate !=null){
             Movement.walkTo( closestCoordinate.getX(), closestCoordinate.getY(), false);
-            delay(600);}
+            //delay(600);
+        }
+
     }
 
     public List<Coordinate>getAllCoordinatesInRectangularArea (Area.Rectangular rectangularArea)
@@ -788,7 +873,7 @@ public class Vindicta extends LoopingScript {
 
     public void grounditem()
     {
-        try {
+
             ResultSet<GroundItem> items = GroundItemQuery.newQuery().results();
                 for (GroundItem item : items) {
                     if (item.interact("Take")) {
@@ -796,19 +881,27 @@ public class Vindicta extends LoopingScript {
                         Execution.delayUntil(10000,() -> Interfaces.isOpen(1622));
                         MiniMenu.interact(ComponentAction.COMPONENT.getType(),1,-1,106299414);
                         long waittime = RandomGenerator.nextInt(1800, 3000);
-                        Thread.sleep(waittime);
+                        Execution.delay(waittime);
 
-                        if(numberofkills == numberofkills) {
+
+                        surgecount = 0;
+                        thresholdvalue = 0;
+                        invokedeathcounter = 0;
+
+
+                        if(VarManager.getVarbitValue(16769) == 1)
+                            ActionBar.usePrayer("Deflect Ranged");
+                        else if(VarManager.getVarbitValue(16770) == 1)
+                            ActionBar.usePrayer("Deflect Melee");
+
+
+
                             ActionBar.useTeleport("War's Retreat Teleport");
                             println("Teleporting to War's Retreat");
-                        }
+
                         }
                     }
-           Thread.sleep(600);
-        }catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
+
 
     }
 
@@ -824,7 +917,7 @@ public class Vindicta extends LoopingScript {
         if(VarManager.getVarbitValue(16770) == 0)
             ActionBar.usePrayer("Deflect Melee");
         else {
-            println("Varbit 16798 was" + VarManager.getVarbitValue(16770));
+            //println("Varbit 16798 was" + VarManager.getVarbitValue(16770));
         }
     }
 
@@ -834,7 +927,7 @@ public class Vindicta extends LoopingScript {
         if(VarManager.getVarbitValue(16769) == 0)
             ActionBar.usePrayer("Deflect Ranged");
         else {
-            println("Varbit 16769 was" + VarManager.getVarbitValue(16769));
+           // println("Varbit 16769 was" + VarManager.getVarbitValue(16769));
         }
     }
 
@@ -897,4 +990,21 @@ public class Vindicta extends LoopingScript {
     public void setessenceoff (boolean essenceoff ) {
         this.essenceoff  = essenceoff ;
     }
+
+    public boolean isExcalibur () {
+        return Excalibur ;
+    }
+
+    public void setExcalibur (boolean Excalibur ) {
+        this.Excalibur  = Excalibur ;
+    }
+
+    public boolean isscriptures  () {
+        return scriptures ;
+    }
+
+    public void setscriptures  (boolean scriptures  ) {
+        this.scriptures = scriptures  ;
+    }
+
 }
