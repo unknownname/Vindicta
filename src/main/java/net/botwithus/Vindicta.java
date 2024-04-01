@@ -540,7 +540,7 @@ public class Vindicta extends LoopingScript {
             if (!results.isEmpty() && vindictap2.getAnimationId() == 28276)
             {
                 //delay(1800);
-                delay(600);
+                //delay(600);
 
                 Coordinate safePositon = findsafespotCoorindate(rectangularArea);
                 if(safePositon !=null)
