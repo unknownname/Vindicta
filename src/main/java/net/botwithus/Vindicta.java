@@ -2,6 +2,7 @@ package net.botwithus;
 
 import net.botwithus.api.game.hud.inventories.Backpack;
 import net.botwithus.api.game.hud.inventories.Bank;
+import net.botwithus.api.game.hud.inventories.Equipment;
 import net.botwithus.api.game.hud.inventories.LootInventory;
 import net.botwithus.internal.scripts.ScriptDefinition;
 import net.botwithus.rs3.events.impl.SceneObjectUpdateEvent;
@@ -36,6 +37,7 @@ import net.botwithus.rs3.script.LoopingScript;
 import net.botwithus.rs3.script.config.ScriptConfig;
 import net.botwithus.rs3.util.RandomGenerator;
 import net.botwithus.rs3.*;
+import net.botwithus.api.game.hud.*;
 
 
 import java.lang.ref.Cleaner;
@@ -168,7 +170,6 @@ public class Vindicta extends LoopingScript {
         int currentHealth = player.getCurrentHealth();
         int adrenaline = VarManager.getVarValue(VarDomainType.PLAYER, 679);
         int currentprayer = player.getPrayerPoints();
-
         if(player.getCoordinate().getRegionId() == 13214)
         {
             SceneObject BankChest = SceneObjectQuery.newQuery().name("Bank chest").results().nearest();
@@ -194,7 +195,7 @@ public class Vindicta extends LoopingScript {
                     }
                 }
             }
-            if(currentprayer < 9000)
+            if(currentprayer < (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10) && VarManager.getVarbitValue(45682) == 1)
             {
                 if(altarwar != null)
                 {
@@ -202,7 +203,7 @@ public class Vindicta extends LoopingScript {
                     Execution.delayUntil(10000,() -> player.getPrayerPoints() >= 9600);
                 }
             }
-            if(adrenaline < 1000)
+            if(adrenaline < 1000 && VarManager.getVarbitValue(45683) == 1)
             {
                 if(adrenalinecrystal != null)
                 {
@@ -210,7 +211,7 @@ public class Vindicta extends LoopingScript {
                     Execution.delayUntil(10000,() -> VarManager.getVarValue(VarDomainType.PLAYER, 679) == 1000);
                 }
             }
-            if(adrenaline >= 800 && currentprayer >=9000 && currentHealth >= player.getMaximumHealth())
+            if(adrenaline >= 800 && currentprayer >= (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10) && currentHealth >= player.getMaximumHealth())
             {
 
                 bossportal(player);
@@ -231,6 +232,7 @@ public class Vindicta extends LoopingScript {
 
                     Execution.delay(1000);
                     println("Enter Threshold: " + threshold.interact("Traverse"));
+
                     //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));;
                     Execution.delay(3000);
                     thresholdvalue = thresholdvalue +1;
@@ -269,6 +271,27 @@ public class Vindicta extends LoopingScript {
 
         if(instanceregionID == Client.getLocalPlayer().getCoordinate().getRegionId())
         {
+
+            if(VarManager.getVarbitValue(26037) == 0)
+            {
+                overloadChecked = false;
+            }
+            if(useStatBoostingPotion && !overloadChecked)
+            {
+                useOverload();
+            }
+            if(scriptures)
+            {
+                books();
+            }
+            if(Excalibur)
+            {
+                enhancedExca();
+            }
+            if(darknessenable)
+            {
+                activateDarkness();
+            }
             Npc vindictap2 = NpcQuery.newQuery().name("Gorvek and Vindicta").results().nearest();
             if(vindictap2 !=null && (vindictap2.getCurrentHealth() == 0 || vindictap2.getAnimationId() == 28272))
                 grounditem();
@@ -393,26 +416,7 @@ public class Vindicta extends LoopingScript {
 
     private void vandictafight()
     {
-        if(VarManager.getVarbitValue(26037) == 0)
-        {
-            overloadChecked = false;
-        }
-        if(useStatBoostingPotion && !overloadChecked)
-        {
-           useOverload();
-        }
-        if(darknessenable)
-        {
-            activateDarkness();
-        }
-        if(scriptures)
-        {
-            books();
-        }
-        if(Excalibur)
-        {
-            enhancedExca();
-        }
+
 
 
 
@@ -477,7 +481,7 @@ public class Vindicta extends LoopingScript {
             {
 
                 Coordinate safePositon = findsafespotCoorindate(rectangularArea);
-                if(safePositon !=null)
+                if(safePositon !=null )
                 {
                     Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
                     delay(600);
@@ -556,9 +560,7 @@ public class Vindicta extends LoopingScript {
                     delay(600);
 
                 }*/
-            }
-
-            else if (isOnObject)
+            } else if (isOnObject)
             {
                 Coordinate safePositon = findsafespotCoorindate(rectangularArea);
                 if(safePositon !=null)
@@ -702,6 +704,9 @@ public class Vindicta extends LoopingScript {
             {
                 if(VarManager.getVarbitValue(22838) == 0)
                 {
+                    Item item = InventoryItemQuery.newQuery(93).name("Augmented enhanced Excalibur").results().first();
+                    if(item !=null  && ComponentQuery.newQuery(291).spriteId(14632).results().isEmpty())
+                    //println(" Excalibur activated" + );
                     println("Excalibur Activated : " + ActionBar.useItem("Augmented enhanced Excalibur","Activate"));
                 }
             }
@@ -717,7 +722,8 @@ public class Vindicta extends LoopingScript {
                 if(VarManager.getVarbitValue(30605) == 0)
                 {
                     if(VarManager.getVarbitValue(30604) >=0) {
-                        println("Activated Scripture : " + ActionBar.useItem("Scripture of Wen","Activate/Deactivate"));
+                        //println("Activated Scripture : " + ActionBar.useItem("Scripture of Wen","Activate/Deactivate"));
+                        println("Activated Scripture : " + Equipment.interact(Equipment.Slot.POCKET,"Activate/Deactivate"));
                     }else
                     {
                         println("Book is out of charge");
