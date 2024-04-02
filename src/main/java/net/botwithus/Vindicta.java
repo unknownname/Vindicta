@@ -194,16 +194,14 @@ public class Vindicta extends LoopingScript {
                         Bank.loadPreset(presentNumber);
                     }
                 }
-            }
-            if(currentprayer < (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10) && VarManager.getVarbitValue(45682) == 1)
+            } else if(currentprayer < (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10) && VarManager.getVarbitValue(45682) == 1)
             {
                 if(altarwar != null)
                 {
                     println("Prayer Refill: " + altarwar.interact("Pray"));
                     Execution.delayUntil(10000,() -> player.getPrayerPoints() >= 9600);
                 }
-            }
-            if(adrenaline < 1000 && VarManager.getVarbitValue(45683) == 1)
+            } else if(adrenaline < 1000 && VarManager.getVarbitValue(45683) == 1)
             {
                 if(adrenalinecrystal != null)
                 {
