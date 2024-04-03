@@ -76,8 +76,11 @@ public class Vindicta extends LoopingScript {
 
     private boolean scriptures = false;
 
+    private int outoffoodcounter = 0;
+    boolean funtionExecuted = false;
+
     int presentNumber = 1;
-    int numberofkills = 5000;  //Default Value
+    int numberofkills = 7000;  //Default Value
     //NativeInteger presetNumber = new NativeInteger(1);
     private int currentItem = 0;
     String[] prayerRestoreOptions = { "Super Restore", "Prayer Potions" };
@@ -118,6 +121,12 @@ public class Vindicta extends LoopingScript {
         this.sgc = new VindictaGraphicsContext(getConsole(), this);
         this.loopDelay = 500;
         subscribe(ServerTickedEvent.class, ServerTickedEvent -> {
+
+            int currentTick = Client.getClientCycle();
+            final long tickDuration = 600;
+            long currentTime = System.currentTimeMillis();
+            long timeSinceLastTick = currentTick % tickDuration;
+            long timeUntilNextTick = tickDuration - timeSinceLastTick;
 
             if(instanceregionID == Client.getLocalPlayer().getCoordinate().getRegionId())
             {
@@ -179,6 +188,17 @@ public class Vindicta extends LoopingScript {
             surgecount = 0; // Setting up value to 0 everytime player enter's war's area
             if(vindictadeathcounter >=1)
             {
+                outoffoodcounter = 0;
+
+                if(VarManager.getVarbitValue(16769) == 1)
+                    ActionBar.usePrayer("Deflect Ranged");
+                else if(VarManager.getVarbitValue(16770) == 1)
+                    ActionBar.usePrayer("Deflect Melee");
+                else if(VarManager.getVarbitValue(16747) == 1)
+                    ActionBar.usePrayer("Protect from Melee");
+                else if(VarManager.getVarbitValue(16746) == 1)
+                    ActionBar.usePrayer("Protect from Ranged");
+
                 Execution.delay(RandomGenerator.nextInt(1500,2000));
             }
 
@@ -199,7 +219,7 @@ public class Vindicta extends LoopingScript {
                 if(altarwar != null)
                 {
                     println("Prayer Refill: " + altarwar.interact("Pray"));
-                    Execution.delayUntil(10000,() -> player.getPrayerPoints() >= 9600);
+                    Execution.delayUntil(10000,() -> player.getPrayerPoints() >= (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10));
                 }
             } else if(adrenaline < 1000 && VarManager.getVarbitValue(45683) == 1)
             {
@@ -220,44 +240,49 @@ public class Vindicta extends LoopingScript {
 
         if(player.getCoordinate().getRegionId() == 12395 || player.getCoordinate().getRegionId() == 12396 || player.getCoordinate().getRegionId() == 12651 || player.getCoordinate().getRegionId() == 12652 )
         {
-            SceneObject threshold = SceneObjectQuery.newQuery().name("Threshold").results().nearest();
+            EntityResultSet<SceneObject> threshold = SceneObjectQuery.newQuery().name("Threshold").results();
             if(VarManager.getVarbitValue(30856) >= 400 )
             {
+                if( !threshold.isEmpty()) {
+                    SceneObject threadhold1 = threshold.nearest();
 
-                println("Threshold value Outside: " + thresholdvalue);
-                if(threshold != null && thresholdvalue == 0)
-                {
+                    println("Threshold value Outside: " + thresholdvalue);  //&& thresholdvalue == 0
+                    if (threadhold1 != null && !Interfaces.isOpen(1591) && thresholdvalue ==0 && player.getCoordinate().getX() >=3117) {
 
-                    Execution.delay(1000);
-                    println("Enter Threshold: " + threshold.interact("Traverse"));
+                        Execution.delay(1000);
+                        println("Enter Threshold: " + threadhold1.interact("Traverse"));
 
-                    //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));;
-                    Execution.delay(3000);
-                    thresholdvalue = thresholdvalue +1;
-                    //println("Threshold value: " + thresholdvalue);
-
-                }else if(threshold != null && thresholdvalue == 1)
-                {
-                    println("Threshold value Second Loop: " + thresholdvalue);
-                    enterfight(player);
+                        //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));;
+                        Execution.delay(RandomGenerator.nextInt(3000, 5000));
+                        if(player.getCoordinate().getX() <=3116)
+                            thresholdvalue = thresholdvalue + 1;
+                        //println("Threshold value: " + thresholdvalue);
+                        //&& thresholdvalue == 1
+                    } if (threadhold1 != null && thresholdvalue == 1 ) {
+                        println("Threshold value Second Loop: " + thresholdvalue);
+                        enterfight(player);
+                    }
                 }
 
             }else if(killrequired == false || (GetInstanceTimeLeft() >=1 && GetInstanceTimeLeft() <=60))
             {
-                if (threshold !=null && thresholdvalue == 0)
-                {
+                if( !threshold.isEmpty()) {
+                    SceneObject threadhold1 = threshold.nearest();  // && thresholdvalue == 0
+                    if (threadhold1 != null && !Interfaces.isOpen(1591) && thresholdvalue == 0 && player.getCoordinate().getX() >=3117 ) {
 
-                    Execution.delay(1000);
-                    println("Enter Threshold: " + threshold.interact("Traverse"));
-                    //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));
-                    Execution.delay(3000);
-                    thresholdvalue = thresholdvalue + 1;
-                    //println("Threshold value: " + thresholdvalue);
+                        Execution.delay(1000);
+                        println("Enter Threshold: " + threadhold1.interact("Traverse"));
+                        //Execution.delayUntil(40000,()-> threshold.interact("Traverse"));
+                        Execution.delay(RandomGenerator.nextInt(3000, 5000));
+                        if(player.getCoordinate().getX() <=3116)
+                            thresholdvalue = thresholdvalue + 1;
 
-                }else if(threshold !=null && thresholdvalue == 1)
-                {
-                    println("Threshold value Second Loop: " + thresholdvalue);
-                    enterfight(player);
+                        //println("Threshold value: " + thresholdvalue);
+                        //&& thresholdvalue == 1
+                    }  if (threadhold1 != null && thresholdvalue == 1) {
+                        println("Threshold value Second Loop: " + thresholdvalue);
+                        enterfight(player);
+                    }
                 }
             }
             else
@@ -267,34 +292,28 @@ public class Vindicta extends LoopingScript {
             }
         }
 
-        if(instanceregionID == Client.getLocalPlayer().getCoordinate().getRegionId())
-        {
+        if(instanceregionID == Client.getLocalPlayer().getCoordinate().getRegionId()) {
 
-            if(VarManager.getVarbitValue(26037) == 0)
-            {
+            if (VarManager.getVarbitValue(26037) == 0) {
                 overloadChecked = false;
             }
-            if(useStatBoostingPotion && !overloadChecked)
-            {
+            if (useStatBoostingPotion && !overloadChecked) {
                 useOverload();
             }
-            if(scriptures)
-            {
+            if (scriptures) {
                 books();
             }
-            if(Excalibur)
-            {
+            if (Excalibur) {
                 enhancedExca();
             }
-            if(darknessenable)
-            {
+            if (darknessenable) {
                 activateDarkness();
             }
             Npc vindictap2 = NpcQuery.newQuery().name("Gorvek and Vindicta").results().nearest();
-            if(vindictap2 !=null && (vindictap2.getCurrentHealth() == 0 || vindictap2.getAnimationId() == 28272))
+            if (vindictap2 != null && (vindictap2.getCurrentHealth() == 0 || vindictap2.getAnimationId() == 28272)) {
                 grounditem();
+            }
         }
-
 
 
 
@@ -308,7 +327,10 @@ public class Vindicta extends LoopingScript {
         Item food = InventoryItemQuery.newQuery(93).category(58).results().first();
         if (food == null) {
             println("Out of food.");
-            ActionBar.useTeleport("War's Retreat Teleport");
+            if(outoffoodcounter == 0) {
+                ActionBar.useTeleport("War's Retreat Teleport");
+                outoffoodcounter = outoffoodcounter + 1;
+            }
             return;
         }
         boolean eat = Backpack.interact(food.getSlot(), "Eat");
@@ -382,14 +404,15 @@ public class Vindicta extends LoopingScript {
         if (barrier != null) {
             println("Traverse Outside Barrier: " + barrier.interact("Traverse"));
             Execution.delay(2000);
-            MiniMenu.interact(ComponentAction.COMPONENT.getType(), 1, -1, 104267836);  //Region ID 37452 //npc name: Vindicta phase2: Gorvek and Vindicta
+            if(Interfaces.isOpen(1591)){
+            MiniMenu.interact(ComponentAction.COMPONENT.getType(), 1, -1, 104267836);}  //Region ID 37452 //npc name: Vindicta phase2: Gorvek and Vindicta
             // Vindicta All three Animation: 28253, 28260, 28256
 
             Execution.delay(3000);
 
         }
         if (player.getCoordinate().getRegionId() != 12395) {
-            SceneObject barrier1 = SceneObjectQuery.newQuery().name("Barrier").results().nearest();
+            SceneObject barrier1 = SceneObjectQuery.newQuery().name("Barrier").id(101910).results().nearest();
             if (barrier1 != null) {
                 println("Traverse the Barrier: " + barrier1.interact("Traverse"));
                 Execution.delayUntil(10000, () -> Interfaces.isOpen(1188));
@@ -414,11 +437,7 @@ public class Vindicta extends LoopingScript {
 
     private void vandictafight()
     {
-
-
-
-
-        Npc vindictap1 = NpcQuery.newQuery().name("Vindicta").results().nearest();
+       Npc vindictap1 = NpcQuery.newQuery().name("Vindicta").results().nearest();
         Npc vindictap2 = NpcQuery.newQuery().name("Gorvek and Vindicta").results().nearest();
         Component resonance = ComponentQuery.newQuery(284).spriteId(14222).results().first();
         SceneObjectQuery firewall = SceneObjectQuery.newQuery();
@@ -467,42 +486,43 @@ public class Vindicta extends LoopingScript {
             {
                 meleeprayerswitch();
 
-            }else if(vindictap1.getAnimationId() == 28260)
+            }/*else if(vindictap1.getAnimationId() == 28260)
             {
                 meleeprayerswitch();
 
-            }
+            }*/
             else {
-                println("extra animation Detected");
+                //println("extra animation Detected");
             }
-            if (!results.isEmpty() && vindictap1.getAnimationId() == 28260)
+            if (vindictap1.getAnimationId() == 28260 && !funtionExecuted)  //!results.isEmpty() &&
             {
 
                 Coordinate safePositon = findsafespotCoorindate(rectangularArea);
-                if(safePositon !=null )
+                if(safePositon !=null)
                 {
                     Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
                     delay(600);
+                    funtionExecuted = true;
+
+                    println("Player standing Phase 1 - Animation ID Detect: " + isPlayerstandingonobject(playerPosition));
+                    //Execution.delayUntil(1200,() -> playerPosition.equals(safePositon));
+                    return;
+
                 }
 
-                /*for(int x=0; x<=1; x++){
-                //Area.Rectangular rectangularArea = new Area.Rectangular(topleftCorner, bottomRightCorner);
-                moveTounoccupiedCoorindate(rectangularArea);
-                println("Moving away from Firewall Vindicta Phase 1 attack");
-                    delay(600);
-
-            }*/
+            }/*
             }
-            else if(isOnObject)
+            else*/ if(isOnObject && !funtionExecuted)
             {
                 Coordinate safePositon = findsafespotCoorindate(rectangularArea);
                 if(safePositon !=null)
                 {
                     Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
                     delay(600);
+                    funtionExecuted = true;
 
-                    println("Player standing on Object: " + isPlayerstandingonobject(playerPosition));
-                    println("Player moving to safe spot: " + safePositon);
+                    println("Player standing Phase 1 on Object: " + isPlayerstandingonobject(playerPosition));
+                    //Execution.delayUntil(1200,() -> playerPosition.equals(safePositon));
                     return;
 
                 }
@@ -530,44 +550,47 @@ public class Vindicta extends LoopingScript {
                     rangeprayerswitch();
 
                 }
-            } else if (vindictap2.getAnimationId() == 28276) {
+            } /*else if (vindictap2.getAnimationId() == 28276) {
                 //delay(1200);
                 attackNpc(vindictap2);
                 //ActionBar.useAbility("Surge");
-            }
+            }*/
             else {
-                println(" extra animation Detected" + vindictap2.getAnimationId());
+               // println(" extra animation Detected" + vindictap2.getAnimationId());
             }
 
-            if (!results.isEmpty() && vindictap2.getAnimationId() == 28276)
+            /*if (!results.isEmpty() && vindictap2.getAnimationId() == 28276)
             {
                 //delay(1800);
                 //delay(600);
-
-                Coordinate safePositon = findsafespotCoorindate(rectangularArea);
-                if(safePositon !=null)
-                {
-                    Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
-                    delay(600);
+                println("Vindicta Phase 2 firewall check");
+                for(int x=0; x==1; x++) {
+                    println("Vindicta Phase 2 inside for loop firewall check");
+                    Coordinate safePositon = findsafespotCoorindate(rectangularArea);
+                    if (safePositon != null) {
+                        Movement.walkTo(safePositon.getX(), safePositon.getY(), false);
+                        delay(600);
+                        x=0;
+                    }
                 }
-
-                /*for(int x=0; x<=1; x++) {
+                *//*for(int x=0; x<=1; x++) {
                     //Area.Rectangular rectangularArea = new Area.Rectangular(topleftCorner, bottomRightCorner);
                     moveTounoccupiedCoorindate(rectangularArea);
                     println("Moving away from Firewall Vindicta Phase 2 attack");
                     delay(600);
 
-                }*/
-            } else if (isOnObject)
+                }*//*
+            } else*/ if (isOnObject && !funtionExecuted)
             {
                 Coordinate safePositon = findsafespotCoorindate(rectangularArea);
                 if(safePositon !=null)
                 {
+
                     Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
                     delay(600);
-
-                    println("Player standing on Object: " + isPlayerstandingonobject(playerPosition));
-                    println("Player moving to safe spot: " + safePositon);
+                    println("Player standing Phase 2 on Object: " + isPlayerstandingonobject(playerPosition));
+                    funtionExecuted = true;
+                    //Execution.delayUntil(1200,() -> playerPosition.equals(safePositon));
                     return;
 
                 }
@@ -586,6 +609,10 @@ public class Vindicta extends LoopingScript {
                     ActionBar.usePrayer("Deflect Ranged");
                 else if(VarManager.getVarbitValue(16770) == 1)
                     ActionBar.usePrayer("Deflect Melee");
+                else if(VarManager.getVarbitValue(16747) == 1)
+                    ActionBar.usePrayer("Protect from Melee");
+                else if(VarManager.getVarbitValue(16746) == 1)
+                    ActionBar.usePrayer("Protect from Ranged");
 
 
                 //grounditem();
@@ -593,7 +620,10 @@ public class Vindicta extends LoopingScript {
 
             }
         }
-
+        if(!isPlayerstandingonobject(playerPosition))
+        {
+            funtionExecuted = false;
+        }
     }
 
     private void vindictaphase1()
@@ -878,36 +908,62 @@ public class Vindicta extends LoopingScript {
     public void grounditem()
     {
 
-            ResultSet<GroundItem> items = GroundItemQuery.newQuery().results();
-                for (GroundItem item : items) {
-                    if (item.interact("Take")) {
-                        println("Picking up: " + item.getName());
-                        Execution.delayUntil(10000,() -> Interfaces.isOpen(1622));
-                        MiniMenu.interact(ComponentAction.COMPONENT.getType(),1,-1,106299414);
-                        long waittime = RandomGenerator.nextInt(1800, 3000);
-                        Execution.delay(waittime);
+            //ResultSet<GroundItem> items = GroundItemQuery.newQuery().results();
+        EntityResultSet<GroundItem> groundItems = GroundItemQuery.newQuery().results();
 
+        //Execution.delay(random.nextInt(1200, 1800));
+        //while (!allItemsPickedup) {
+        if (!groundItems.isEmpty()) {
+            GroundItem groundItem = groundItems.random();
+            if (groundItem != null) {
+                groundItem.interact("Take");
+                Execution.delayUntil(RandomGenerator.nextInt(5000, 5500), () -> Client.getLocalPlayer().isMoving());
 
-                        surgecount = 0;
-                        thresholdvalue = 0;
-                        invokedeathcounter = 0;
+                if (Client.getLocalPlayer().isMoving() && groundItem.getCoordinate() != null && Distance.between(Client.getLocalPlayer().getCoordinate(), groundItem.getCoordinate()) > 10) {
+                    println("Used Surge: " + ActionBar.useAbility("Surge"));
+                    Execution.delay(RandomGenerator.nextInt(200, 250));
+                }
 
+                if (groundItem.getCoordinate() != null) {
+                    Execution.delayUntil(RandomGenerator.nextInt(100, 200), () -> Distance.between(Client.getLocalPlayer().getCoordinate(), groundItem.getCoordinate()) <= 10);
+                }
 
-                        if(VarManager.getVarbitValue(16769) == 1)
-                            ActionBar.usePrayer("Deflect Ranged");
-                        else if(VarManager.getVarbitValue(16770) == 1)
-                            ActionBar.usePrayer("Deflect Melee");
+                if (groundItem.interact("Take")) {
+                    println("Taking " + groundItem.getName() + "...");
+                    Execution.delay(RandomGenerator.nextInt(600, 700));
+                }
 
-
-
-                            ActionBar.useTeleport("War's Retreat Teleport");
-                            println("Teleporting to War's Retreat");
-
-                        }
+                boolean interfaceOpened = Execution.delayUntil(15000, () -> Interfaces.isOpen(1622));
+                if (!interfaceOpened) {
+                    println("Interface 1622 did not open. Attempting to interact with ground item again.");
+                    if (groundItem.interact("Take")) {
+                        println("Attempting to take " + groundItem.getName() + " again...");
+                        Execution.delay(RandomGenerator.nextInt(250, 300));
                     }
+                }
+                MiniMenu.interact(ComponentAction.COMPONENT.getType(),1,-1,106299414);
+            }
 
+            surgecount = 0;
+            thresholdvalue = 0;
+            invokedeathcounter = 0;
 
-    }
+            if(VarManager.getVarbitValue(16769) == 1)
+                ActionBar.usePrayer("Deflect Ranged");
+            else if(VarManager.getVarbitValue(16770) == 1)
+                ActionBar.usePrayer("Deflect Melee");
+            else if(VarManager.getVarbitValue(16747) == 1)
+                ActionBar.usePrayer("Protect from Melee");
+            else if(VarManager.getVarbitValue(16746) == 1)
+                ActionBar.usePrayer("Protect from Ranged");
+
+            Execution.delay(RandomGenerator.nextInt(1000,1500));
+            //println(" No items to pickup");
+            ActionBar.useTeleport("War's Retreat Teleport");
+            println("Teleporting to War's Retreat");
+
+        }
+      }
 
     private void attackNpc(Npc npc)
     {
@@ -917,21 +973,45 @@ public class Vindicta extends LoopingScript {
 
     private void meleeprayerswitch()
     {
-        println("Detecting Melee switch, attempting...");
+        //println("Detecting Melee switch, attempting...");
+        if(VarManager.getVarbitValue(16789) == 0)  // Normal Prayer Book
+        {
+            if(VarManager.getVarbitValue(16747) == 0)
+            {
+                ActionBar.usePrayer("Protect from Melee");
+            }
+            else{
+                //Prayer is Already Activated
+            }
+
+        }
+        else if(VarManager.getVarbitValue(16789) == 1)   // Prayer Book Curses
         if(VarManager.getVarbitValue(16770) == 0)
             ActionBar.usePrayer("Deflect Melee");
-        else {
-            //println("Varbit 16798 was" + VarManager.getVarbitValue(16770));
+        else{
+            //Prayer is Already Activated
         }
     }
 
     private void rangeprayerswitch()
     {
-        println("Detecting Range switch, attempting...");
+        //println("Detecting Range switch, attempting...");
+        if(VarManager.getVarbitValue(16789) == 0)  // Normal Prayer Book
+        {
+            if(VarManager.getVarbitValue(16746) == 0)
+            {
+                ActionBar.usePrayer("Protect from Ranged");
+            }
+            else{
+                //Prayer is Already Activated
+            }
+            // Regular Prayer Book
+        }
+        else if(VarManager.getVarbitValue(16789) == 1)   // Prayer Book Curses
         if(VarManager.getVarbitValue(16769) == 0)
             ActionBar.usePrayer("Deflect Ranged");
         else {
-           // println("Varbit 16769 was" + VarManager.getVarbitValue(16769));
+           // Prayer is Already Activated   println("Varbit 16769 was" + VarManager.getVarbitValue(16769));
         }
     }
 
