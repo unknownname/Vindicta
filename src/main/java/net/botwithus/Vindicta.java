@@ -256,9 +256,14 @@ public class Vindicta extends LoopingScript {
                         Execution.delay(RandomGenerator.nextInt(3000, 5000));
                         if(player.getCoordinate().getX() <=3116)
                             thresholdvalue = thresholdvalue + 1;
+
                         //println("Threshold value: " + thresholdvalue);
                         //&& thresholdvalue == 1
-                    } if (threadhold1 != null && thresholdvalue == 1 ) {
+                    }else if(threadhold1 != null && thresholdvalue == 0)
+                    {   if(player.getCoordinate().getX() <=3116)
+                        thresholdvalue = thresholdvalue + 1;
+                    }
+                    if (threadhold1 != null && thresholdvalue == 1 ) {
                         println("Threshold value Second Loop: " + thresholdvalue);
                         enterfight(player);
                     }
@@ -276,10 +281,13 @@ public class Vindicta extends LoopingScript {
                         Execution.delay(RandomGenerator.nextInt(3000, 5000));
                         if(player.getCoordinate().getX() <=3116)
                             thresholdvalue = thresholdvalue + 1;
-
                         //println("Threshold value: " + thresholdvalue);
                         //&& thresholdvalue == 1
-                    }  if (threadhold1 != null && thresholdvalue == 1) {
+                    }else if(threadhold1 != null && thresholdvalue == 0)
+                    {   if(player.getCoordinate().getX() <=3116)
+                        thresholdvalue = thresholdvalue + 1;
+                    }
+                    if (threadhold1 != null && thresholdvalue == 1) {
                         println("Threshold value Second Loop: " + thresholdvalue);
                         enterfight(player);
                     }
