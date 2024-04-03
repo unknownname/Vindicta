@@ -24,7 +24,7 @@ public class VindictaGraphicsContext extends ScriptGraphicsContext {
 
         ImGui.SetWindowSize(600f,400f);
 
-        if (ImGui.Begin("Vindicta Script Beta v1", ImGuiWindowFlag.None.getValue())) {
+        if (ImGui.Begin("Vindicta Script v1", ImGuiWindowFlag.None.getValue())) {
 
             long elapsedTimeMillis = System.currentTimeMillis() - scriptstartTime;
             long elapsedSeconds = elapsedTimeMillis / 1000;
