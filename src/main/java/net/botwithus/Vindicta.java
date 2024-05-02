@@ -28,6 +28,7 @@ import net.botwithus.rs3.game.scene.entities.characters.npc.Npc;
 import net.botwithus.rs3.game.scene.entities.characters.player.LocalPlayer;
 import net.botwithus.rs3.game.scene.entities.item.GroundItem;
 import net.botwithus.rs3.game.scene.entities.object.SceneObject;
+import net.botwithus.rs3.game.skills.Skills;
 import net.botwithus.rs3.game.vars.VarManager;
 import net.botwithus.rs3.imgui.ImGui;
 import net.botwithus.rs3.imgui.NativeBoolean;
@@ -186,6 +187,23 @@ public class Vindicta extends LoopingScript {
             SceneObject adrenalinecrystal = SceneObjectQuery.newQuery().name("Adrenaline crystal").results().nearest();
             thresholdvalue = 0; // Setting up value to 0 so player can interact with Threshold stupid crap
             surgecount = 0; // Setting up value to 0 everytime player enter's war's area
+            outoffoodcounter = 0;
+
+            if(VarManager.getVarbitValue(16769) == 1){
+                ActionBar.usePrayer("Deflect Ranged");
+                Execution.delay(random.nextLong(750,1250));}
+            if(VarManager.getVarbitValue(16770) == 1){
+                ActionBar.usePrayer("Deflect Melee");
+                Execution.delay(random.nextLong(750,1250));}
+            if(VarManager.getVarbitValue(16747) == 1){
+                ActionBar.usePrayer("Protect from Melee");
+                Execution.delay(random.nextLong(750,1250));}
+            if(VarManager.getVarbitValue(16746) == 1){
+                ActionBar.usePrayer("Protect from Ranged");
+                Execution.delay(random.nextLong(750,1250));}
+
+
+
             if(vindictadeathcounter >=1)
             {
                 outoffoodcounter = 0;
@@ -329,17 +347,36 @@ public class Vindicta extends LoopingScript {
         return random.nextLong(500,750);
     }
 
-
+    long lastfoottimeeat = 0;
     private void eatFood()
     {
-        Item food = InventoryItemQuery.newQuery(93).category(58).results().first();
-        if (food == null) {
+        long currenttime = System.currentTimeMillis();
+        if(currenttime - lastfoottimeeat > 2000) {
+            ResultSet<Item> foodItems = InventoryItemQuery.newQuery(93).category(58).results();
+            if (!foodItems.isEmpty()) {
+                Item food = foodItems.first();
+                if (food != null) {
+                    boolean success = Backpack.interact(food.getSlot(), "Eat");
+                    if (success) {
+                        println("Successfully ate " + food.getName());
+                    } else {
+                        println(" Failed to eat.");
+                    }
+                }
+            } else {
+                println("No food found");
+            }
+
+        }
+       /* if (food == null) {
             println("Out of food.");
             if(outoffoodcounter == 0) {
                 ActionBar.useTeleport("War's Retreat Teleport");
+                Execution.delayUntil(10000,() -> Client.getLocalPlayer().getAnimationId() ==-1);
                 outoffoodcounter = outoffoodcounter + 1;
+                botState = BotState.FIGHTING;
             }
-            return;
+
         }
         boolean eat = Backpack.interact(food.getSlot(), "Eat");
         if (eat) {
@@ -349,7 +386,7 @@ public class Vindicta extends LoopingScript {
         } else {
             println("Failed to eat.");
         }
-
+*/
     }
 
     private void bossportal(LocalPlayer player)
@@ -359,7 +396,7 @@ public class Vindicta extends LoopingScript {
         {
 
             println("Enter Vindicta Portal: " + bossportal.interact("Enter"));
-            Execution.delayUntil(3000, () -> !(player.getAnimationId() == -1));
+            Execution.delayUntil(5000, () -> player.isMoving());   // Change so it's interacting with portal multiple times
         }
         else
         {
@@ -672,7 +709,8 @@ public class Vindicta extends LoopingScript {
                     "Elder overload salve (6)"};
 
             for (String potionName : overloadSalveVariants) {
-                if (ActionBar.containsItem(potionName)) {
+                ResultSet<Item> item = InventoryItemQuery.newQuery(93).name(potionName).results();
+                if (ActionBar.containsItem(potionName) && !item.isEmpty()) {
                     boolean successfulDrink = ActionBar.useItem(potionName, "Drink");
                     if (successfulDrink) {
                         println("Drank " + potionName + " to activate Overload.");
@@ -768,15 +806,19 @@ public class Vindicta extends LoopingScript {
             }
         }
     }
+    private long lastAbilityUseTime = 0;
+    private long ABILITY_COOLDOWN = 5000;
 
     private void DeathEssence() { //55480 sprite iD
         if (deathessence) {
             if (Client.getLocalPlayer() != null) {
-
-                if (Client.getLocalPlayer().getAdrenaline() >= 350 && Client.getLocalPlayer().getFollowing() != null && Client.getLocalPlayer().getFollowing().getCurrentHealth() >= 500 && ComponentQuery.newQuery(291).spriteId(55480).results().isEmpty() && Client.getLocalPlayer().hasTarget()) {
-                    println("Used Death Essence: " + ActionBar.useAbility("Weapon Special Attack"));
-                    //Execution.delayUntil(RandomGenerator.nextInt(1820, 1850), () -> ComponentQuery.newQuery(291).spriteId(55480).results().isEmpty());
-                }
+              if(System.currentTimeMillis() - lastAbilityUseTime > ABILITY_COOLDOWN) {
+                  if (Client.getLocalPlayer().getAdrenaline() >= 350 && Client.getLocalPlayer().getFollowing() != null && Client.getLocalPlayer().getFollowing().getCurrentHealth() >= 500 && ComponentQuery.newQuery(291).spriteId(55480).results().isEmpty() && Client.getLocalPlayer().hasTarget()) {
+                      println("Used Death Essence: " + ActionBar.useAbility("Weapon Special Attack"));
+                      //Execution.delayUntil(RandomGenerator.nextInt(1820, 1850), () -> ComponentQuery.newQuery(291).spriteId(55480).results().isEmpty());
+                  }
+                  lastAbilityUseTime = System.currentTimeMillis();
+              }
             }
         }
     }
@@ -784,10 +826,13 @@ public class Vindicta extends LoopingScript {
     private void essenceoffin() {  //55480 sprite iD
         if (essenceoff) {
             if (Client.getLocalPlayer() != null) {
-
-                if (Client.getLocalPlayer().getAdrenaline() >= 350 && Client.getLocalPlayer().getFollowing() != null && Client.getLocalPlayer().getFollowing().getCurrentHealth() >= 500 && ComponentQuery.newQuery(291).spriteId(55524).results().isEmpty() && Client.getLocalPlayer().hasTarget()) {
-                    println("Used Essence of Finality: " + ActionBar.useAbility("Essence of Finality"));
-                    //Execution.delayUntil(RandomGenerator.nextInt(1820, 1850), () -> ComponentQuery.newQuery(291).spriteId(55524).results().isEmpty());
+                if(System.currentTimeMillis() - lastAbilityUseTime > ABILITY_COOLDOWN)
+                {
+                    if (Client.getLocalPlayer().getAdrenaline() >= 350 && Client.getLocalPlayer().getFollowing() != null && Client.getLocalPlayer().getFollowing().getCurrentHealth() >= 500 && ComponentQuery.newQuery(291).spriteId(55524).results().isEmpty() && Client.getLocalPlayer().hasTarget()) {
+                        println("Used Essence of Finality: " + ActionBar.useAbility("Essence of Finality"));
+                        //Execution.delayUntil(RandomGenerator.nextInt(1820, 1850), () -> ComponentQuery.newQuery(291).spriteId(55524).results().isEmpty());
+                    }
+                    lastAbilityUseTime = System.currentTimeMillis();
                 }
             }
         }
@@ -946,7 +991,7 @@ public class Vindicta extends LoopingScript {
                     println("Interface 1622 did not open. Attempting to interact with ground item again.");
                     if (groundItem.interact("Take")) {
                         println("Attempting to take " + groundItem.getName() + " again...");
-                        Execution.delay(RandomGenerator.nextInt(250, 300));
+                        Execution.delay(RandomGenerator.nextInt(3250, 5000));
                     }
                 }
                 MiniMenu.interact(ComponentAction.COMPONENT.getType(),1,-1,106299414);
