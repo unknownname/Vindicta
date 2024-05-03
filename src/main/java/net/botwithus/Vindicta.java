@@ -44,6 +44,8 @@ import net.botwithus.api.game.hud.*;
 import java.lang.ref.Cleaner;
 import java.util.*;
 
+import static java.sql.DriverManager.println;
+
 public class Vindicta extends LoopingScript {
 
     private VindictaGraphicsContext script1;
@@ -191,16 +193,20 @@ public class Vindicta extends LoopingScript {
 
             if(VarManager.getVarbitValue(16769) == 1){
                 ActionBar.usePrayer("Deflect Ranged");
-                Execution.delay(random.nextLong(750,1250));}
+                Execution.delay(random.nextLong(750,1250));
+                }
             if(VarManager.getVarbitValue(16770) == 1){
                 ActionBar.usePrayer("Deflect Melee");
-                Execution.delay(random.nextLong(750,1250));}
+                Execution.delay(random.nextLong(750,1250));
+                }
             if(VarManager.getVarbitValue(16747) == 1){
                 ActionBar.usePrayer("Protect from Melee");
-                Execution.delay(random.nextLong(750,1250));}
+                Execution.delay(random.nextLong(750,1250));
+                }
             if(VarManager.getVarbitValue(16746) == 1){
                 ActionBar.usePrayer("Protect from Ranged");
-                Execution.delay(random.nextLong(750,1250));}
+                Execution.delay(random.nextLong(750,1250));
+                }
 
 
 
@@ -219,6 +225,8 @@ public class Vindicta extends LoopingScript {
 
                 Execution.delay(RandomGenerator.nextInt(1500,2000));
             }
+            int maxprayer = net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10;
+            int prayerpercentage = currentprayer * 100 / maxprayer;
 
             if (currentHealth < player.getMaximumHealth())
             {
@@ -232,7 +240,7 @@ public class Vindicta extends LoopingScript {
                         Bank.loadPreset(presentNumber);
                     }
                 }
-            } else if(currentprayer < (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10) && VarManager.getVarbitValue(45682) == 1)
+            } else if(prayerpercentage < 70 && VarManager.getVarbitValue(45682) == 1)
             {
                 if(altarwar != null)
                 {
@@ -247,7 +255,12 @@ public class Vindicta extends LoopingScript {
                     Execution.delayUntil(10000,() -> VarManager.getVarValue(VarDomainType.PLAYER, 679) == 1000);
                 }
             }
-            if(adrenaline >= 800 && currentprayer >= (net.botwithus.api.game.hud.prayer.Prayer.getMaxPrayerPoints() * 10) && currentHealth >= player.getMaximumHealth())
+
+            if(VarManager.getVarbitValue(45683) == 0 && prayerpercentage > 50 && currentHealth >= player.getMaximumHealth())
+            {
+                bossportal(player);
+            }
+            else if(adrenaline >= 800 && prayerpercentage > 50 && currentHealth >= player.getMaximumHealth())
             {
 
                 bossportal(player);
@@ -396,7 +409,7 @@ public class Vindicta extends LoopingScript {
         {
 
             println("Enter Vindicta Portal: " + bossportal.interact("Enter"));
-            Execution.delayUntil(5000, () -> player.isMoving());   // Change so it's interacting with portal multiple times
+            Execution.delayUntil(3000, () -> (player.getAnimationId() == -1));   // Change so it's interacting with portal multiple times
         }
         else
         {
@@ -546,7 +559,7 @@ public class Vindicta extends LoopingScript {
                 if(safePositon !=null)
                 {
                     Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
-                    delay(600);
+                    delay(750);
                     funtionExecuted = true;
 
                     println("Player standing Phase 1 - Animation ID Detect: " + isPlayerstandingonobject(playerPosition));
@@ -632,7 +645,7 @@ public class Vindicta extends LoopingScript {
                 {
 
                     Movement.walkTo(safePositon.getX(),safePositon.getY(),false);
-                    delay(600);
+                    delay(750);
                     println("Player standing Phase 2 on Object: " + isPlayerstandingonobject(playerPosition));
                     funtionExecuted = true;
                     //Execution.delayUntil(1200,() -> playerPosition.equals(safePositon));
@@ -991,7 +1004,7 @@ public class Vindicta extends LoopingScript {
                     println("Interface 1622 did not open. Attempting to interact with ground item again.");
                     if (groundItem.interact("Take")) {
                         println("Attempting to take " + groundItem.getName() + " again...");
-                        Execution.delay(RandomGenerator.nextInt(3250, 5000));
+                        Execution.delay(RandomGenerator.nextInt(600, 900));
                     }
                 }
                 MiniMenu.interact(ComponentAction.COMPONENT.getType(),1,-1,106299414);
